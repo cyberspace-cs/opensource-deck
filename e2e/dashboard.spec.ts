@@ -1,5 +1,37 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import sample from "../public/data/dashboard.json" with { type: "json" };
+
+test("legacy candidates exclude repositories closed to external PRs", async ({
+  page,
+}) => {
+  await page.route("**/data/dashboard.json", async (route) => {
+    await route.fulfill({
+      json: {
+        ...sample,
+        recentIssues: [
+          ...sample.recentIssues,
+          {
+            ...sample.recentIssues[0],
+            repository: "OpenAI/Codex",
+            title: "Excluded Codex candidate",
+          },
+        ],
+      },
+    });
+  });
+  await page.goto("/");
+  const issuesButton = page.getByRole("button", { name: /近期 Issue/ });
+  await expect(issuesButton).toContainText(String(sample.recentIssues.length));
+  await issuesButton.click();
+  await expect(
+    page.getByRole("table", { name: "近期可贡献 Issue" }),
+  ).toBeVisible();
+  await expect(page.getByText("Excluded Codex candidate")).toHaveCount(0);
+  await expect(
+    page.getByLabel("近期 Issue 汇总").locator("strong").first(),
+  ).toHaveText(String(sample.recentIssues.length));
+});
 
 test("desktop workspace supports filtering, details, and command search", async ({
   page,

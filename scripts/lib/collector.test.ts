@@ -175,6 +175,44 @@ function fetcher(privateRepository: boolean): typeof fetch {
 }
 
 describe("collectDashboard", () => {
+  it.each(["public_browser", "full"] as const)(
+    "skips excluded candidate requests but keeps participation in %s mode",
+    async (collectionMode) => {
+      const requests: string[] = [];
+      const baseFetcher = fetcher(false);
+      const policyFetcher: typeof fetch = async (input, init) => {
+        const url = String(input);
+        requests.push(url);
+        if (new URL(url).pathname === "/repos/octocat/codex") {
+          return new Response("{}", { status: 404 });
+        }
+        const result = await baseFetcher(
+          url.replaceAll("openai/codex", "acme/demo"),
+          init,
+        );
+        return response(
+          JSON.parse(
+            (await result.text()).replaceAll("acme/demo", "openai/codex"),
+          ),
+        );
+      };
+      const dashboard = await collectDashboard({
+        client: new GitHubClient({ fetcher: policyFetcher }),
+        config,
+        now: new Date("2026-08-30T00:00:00.000Z"),
+        collectionMode,
+      });
+      expect(dashboard.projects[0]?.repository).toBe("openai/codex");
+      expect(dashboard.items[0]?.repository).toBe("openai/codex");
+      expect(dashboard.recentIssues).toEqual([]);
+      expect(
+        requests.some(
+          (url) => new URL(url).pathname === "/repos/openai/codex/issues",
+        ),
+      ).toBe(false);
+    },
+  );
+
   it("enriches priority public pull requests while keeping lookup bounded", async () => {
     const dashboard = await collectDashboard({
       client: new GitHubClient({ fetcher: fetcher(false) }),

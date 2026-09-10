@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { allowsRecentIssueDiscovery } from "./contribution-policy";
 
 export const workStateSchema = z.enum([
   "needs_action",
@@ -185,7 +186,12 @@ export const dashboardDataSchema = z.object({
   }),
   projects: z.array(projectSchema),
   items: z.array(workItemSchema),
-  recentIssues: z.array(recentIssueSchema).default([]),
+  recentIssues: z
+    .array(recentIssueSchema)
+    .default([])
+    .transform((issues) =>
+      issues.filter((issue) => allowsRecentIssueDiscovery(issue.repository)),
+    ),
   syncStatus: z.enum(["success", "partial", "sample"]),
   rateLimit: z.object({
     remaining: z.number().int().nonnegative().nullable(),

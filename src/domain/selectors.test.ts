@@ -31,6 +31,23 @@ describe("filterWorkItems", () => {
 });
 
 describe("filterRecentIssues", () => {
+  it("removes excluded repositories from legacy candidates without losing participation", () => {
+    const snapshot = structuredClone(sample);
+    const candidate = snapshot.recentIssues[0]!;
+    snapshot.recentIssues.push(
+      { ...candidate, repository: "OpenAI/Codex" },
+      { ...candidate, repository: "another-owner/codex" },
+    );
+    const parsed = dashboardDataSchema.parse(snapshot);
+    expect(parsed.recentIssues).toHaveLength(sample.recentIssues.length + 1);
+    expect(
+      parsed.recentIssues.some((issue) => issue.repository === "OpenAI/Codex"),
+    ).toBe(false);
+    expect(parsed.recentIssues.at(-1)?.repository).toBe("another-owner/codex");
+    expect(parsed.items).toEqual(dashboardDataSchema.parse(sample).items);
+    expect(parsed.projects).toEqual(sample.projects);
+  });
+
   it("filters and searches linked pull request evidence", () => {
     const issues = dashboardDataSchema.parse(sample).recentIssues;
     expect(

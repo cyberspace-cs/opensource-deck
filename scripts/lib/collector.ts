@@ -1,4 +1,5 @@
 import { classifyWorkItem } from "../../src/domain/classifier";
+import { allowsRecentIssueDiscovery } from "../../src/domain/contribution-policy";
 import {
   buildProjects,
   mergeWorkItems,
@@ -925,6 +926,7 @@ export async function collectDashboard(
     .toISOString()
     .slice(0, 10);
   const recentIssueRepositories = projects
+    .filter((project) => allowsRecentIssueDiscovery(project.repository))
     .slice(0, browserLimited ? 8 : 20)
     .map((project) => project.repository);
   const knownIssueUrls = new Set(

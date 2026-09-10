@@ -208,6 +208,9 @@ The secondary workspace discovers open issues updated within the last 30 days
 from repositories found through the user's recent contribution activity. It:
 
 - excludes issues already present in the user's contribution workspace;
+- excludes repositories with a reviewed policy prohibiting external PRs
+  (currently `openai/codex`), using case-insensitive full repository coordinates
+  and a maintained policy list with source URLs and deterministic reason codes;
 - retains repository, author, labels, assignees, comment count, timestamps, and
   bounded evidence of open pull requests that cross-reference the issue;
 - derives only inspectable signals: unassigned, assigned, `good first issue`,
@@ -223,7 +226,12 @@ implementation activity, but neither that relationship nor a
 contribution-friendly label guarantees that a proposed pull request will be
 accepted.
 
-Full collection scans at most 20 recently active repositories and retains at
+Policy exclusions apply before repository scan limits and when loading existing
+snapshots, so browser and CLI candidate lists and counts agree. They do not
+remove projects or existing participation items. An unlisted repository's PR
+policy remains unverified; no automatic policy detection is claimed.
+
+Full collection scans at most 20 eligible recently active repositories and retains at
 most 160 issue candidates. It checks up to 40 recent candidates for linked PRs.
 Anonymous browser lookup scans the first 8 repositories, retains at most 80
 candidates, and checks linked PRs for the first 3 candidates to remain within
