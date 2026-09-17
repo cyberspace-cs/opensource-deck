@@ -27,7 +27,9 @@ export function AccountPanel({
   onUseSnapshot,
   onLogout,
 }: AccountPanelProps) {
-  const [username, setUsername] = useState(data.sourceUser.login);
+  const [username, setUsername] = useState(
+    import.meta.env.VITE_DEFAULT_USER || data.sourceUser.login,
+  );
   if (!open) return null;
 
   function submit(event: FormEvent) {

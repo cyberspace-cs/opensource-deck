@@ -42,6 +42,7 @@
     "cli": "tsx cli/index.ts",
     "preview": "vite preview",
     "sync": "tsx scripts/sync-github.ts",
+    "launch": "node launcher/server.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
